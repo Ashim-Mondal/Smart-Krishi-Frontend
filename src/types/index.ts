@@ -1,8 +1,8 @@
-export interface BusinessHours {
-  openTime: string;
-  closeTime: string;
-  days: string;
-}
+// export interface BusinessHours {
+//   openTime: string;
+//   closeTime: string;
+//   days: string;
+// }
 
 export interface ProductEntry {
   id: string;
@@ -16,22 +16,22 @@ export interface ProductEntry {
 export interface Wholesaler {
   id: string;
   businessName: string;
-  ownerName: string;
+  name: string;
   logoInitials: string;
   logoColor: string;
   verified: boolean;
-  rating: number;
-  reviews: number;
-  experience: number;
+  // rating: number;
+  // reviews: number;
+  // experience: number;
   village: string;
   block: string;
-  district: string;
+  // district: string;
   phone: string;
-  whatsapp: string;
-  mapsUrl: string;
-  dealsIn: string[];
+  // whatsapp: string;
+  // mapsUrl: string;
+  // dealsIn: string[];
   about: string;
-  businessHours: BusinessHours;
+  // businessHours: BusinessHours;
   products: ProductEntry[];
 }
 

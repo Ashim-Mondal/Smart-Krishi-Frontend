@@ -43,12 +43,12 @@ export default function ProductDetail() {
                 className="w-11 h-11 rounded-xl flex items-center justify-center text-white font-extrabold text-[10px] text-center leading-tight shrink-0"
                 style={{ backgroundColor: w.logoColor }}
               >
-                {w.businessName.slice(0, 2).toUpperCase()}
+                {w.name.slice(0, 2).toUpperCase()}
               </div>
               <div>
-                <p className="text-sm font-bold text-ink">{w.businessName}</p>
+                <p className="text-sm font-bold text-ink">{w.name}</p>
                 <p className="text-xs text-muted flex items-center gap-1">
-                  <MapPin size={11} /> {w.village}, {w.district.split(",")[0]}
+                  <MapPin size={11} /> {w.village}, {w.block.split(",")[0]}
                 </p>
               </div>
             </div>
@@ -64,7 +64,7 @@ export default function ProductDetail() {
               <Link to={`/wholesalers/${w.id}`}>
                 <Button variant="primary" size="sm">View Profile</Button>
               </Link>
-              <a href={`https://wa.me/${w.whatsapp.replace(/\s|\+/g, "")}`} target="_blank" rel="noreferrer">
+              <a href={`https://wa.me/${w.phone.replace(/\s|\+/g, "")}`} target="_blank" rel="noreferrer">
                 <Button variant="outline" size="sm" icon={<MessageCircle size={14} />} />
               </a>
             </div>
