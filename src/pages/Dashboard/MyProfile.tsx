@@ -22,27 +22,27 @@ export default function MyProfile() {
           className="w-20 h-20 rounded-2xl flex items-center justify-center text-white font-extrabold text-xs text-center leading-tight shrink-0 whitespace-pre-line"
           style={{ backgroundColor: w.logoColor }}
         >
-          {w.logoInitials}
+          {w.name.toUpperCase()}
         </div>
         <div className="flex-1">
-          <h2 className="text-lg font-extrabold text-ink">{w.businessName}</h2>
+          <h2 className="text-lg font-extrabold text-ink">{w.name}</h2>
           {w.verified && (
             <span className="inline-flex items-center gap-1 text-xs font-semibold text-primary bg-primary-light rounded-full px-2.5 py-1 mt-1.5">
               <BadgeCheck size={13} /> Verified Wholesaler
             </span>
           )}
-          <div className="flex items-center gap-1.5 mt-2 text-sm">
+          {/* <div className="flex items-center gap-1.5 mt-2 text-sm">
             <Star size={14} className="fill-warning text-warning" />
             <span className="font-semibold text-ink">{w.rating}</span>
             <span className="text-muted">({w.reviews} Reviews)</span>
-          </div>
+          </div> */}
           <div className="grid sm:grid-cols-2 gap-x-6 gap-y-1.5 mt-4 text-sm">
-            <p><span className="text-muted">Owner: </span><span className="font-medium text-ink">{w.ownerName}</span></p>
-            <p><span className="text-muted">Experience: </span><span className="font-medium text-ink">{w.experience} Years</span></p>
+            <p><span className="text-muted">Owner: </span><span className="font-medium text-ink">{w.name}</span></p>
+            {/* <p><span className="text-muted">Experience: </span><span className="font-medium text-ink">{w.experience} Years</span></p> */}
             <p className="flex items-center gap-1.5"><Phone size={13} className="text-primary" /> {w.phone}</p>
-            <p className="flex items-center gap-1.5"><MessageCircle size={13} className="text-primary" /> {w.whatsapp}</p>
-            <p className="flex items-center gap-1.5"><MapPin size={13} className="text-primary" /> {w.village}, {w.district}</p>
-            <p className="flex items-center gap-1.5"><Clock size={13} className="text-primary" /> {w.businessHours.openTime} - {w.businessHours.closeTime}</p>
+            {/* <p className="flex items-center gap-1.5"><MessageCircle size={13} className="text-primary" /> {w.whatsapp}</p> */}
+            <p className="flex items-center gap-1.5"><MapPin size={13} className="text-primary" /> {w.block}, {w.village}</p>
+            {/* <p className="flex items-center gap-1.5"><Clock size={13} className="text-primary" /> {w.businessHours.openTime} - {w.businessHours.closeTime}</p> */}
           </div>
         </div>
       </div>

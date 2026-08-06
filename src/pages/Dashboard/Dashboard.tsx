@@ -1,4 +1,12 @@
-import { Pencil, Trash2, Plus, Bell, AlertTriangle, CheckCircle2, Info } from "lucide-react";
+import {
+  Pencil,
+  Trash2,
+  Plus,
+  Bell,
+  AlertTriangle,
+  CheckCircle2,
+  Info,
+} from "lucide-react";
 import StatsCard from "../../components/layout/StatsCard";
 import Button from "../../components/ui/Button";
 import EditProfile from "./EditProfile";
@@ -16,7 +24,12 @@ export default function Dashboard() {
     <div>
       <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
         <h1 className="text-xl font-extrabold text-ink">Dashboard</h1>
-        <Button variant="outline" size="sm" icon={<Pencil size={14} />} onClick={editPanel.open}>
+        <Button
+          variant="outline"
+          size="sm"
+          icon={<Pencil size={14} />}
+          onClick={editPanel.open}
+        >
           Edit Profile
         </Button>
       </div>
@@ -31,7 +44,9 @@ export default function Dashboard() {
         <div className="lg:col-span-2 card p-5">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-sm font-bold text-ink">Your Products</h2>
-            <Button size="sm" icon={<Plus size={14} />}>Add Product</Button>
+            <Button size="sm" icon={<Plus size={14} />}>
+              Add Product
+            </Button>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
@@ -47,12 +62,17 @@ export default function Dashboard() {
               </thead>
               <tbody>
                 {profile.products.map((p) => (
-                  <tr key={p.id} className="border-b border-border last:border-0">
+                  <tr
+                    key={p.id}
+                    className="border-b border-border last:border-0"
+                  >
                     <td className="py-2.5 flex items-center gap-2 font-medium text-ink">
                       <span className="text-lg">{p.image}</span> {p.name}
                     </td>
                     <td className="py-2.5 text-ink">{p.buyingQuantity}</td>
-                    <td className="py-2.5 text-ink">₹{p.buyingPrice.toLocaleString("en-IN")}</td>
+                    <td className="py-2.5 text-ink">
+                      ₹{p.buyingPrice.toLocaleString("en-IN")}
+                    </td>
                     <td className="py-2.5 text-muted">{p.lastUpdated}</td>
                     <td className="py-2.5">
                       <span className="text-xs font-semibold text-success bg-green-50 px-2 py-1 rounded-full">
@@ -96,7 +116,9 @@ export default function Dashboard() {
           </div>
 
           <div className="card p-5">
-            <h2 className="text-sm font-bold text-ink mb-4">Recent Inquiries</h2>
+            <h2 className="text-sm font-bold text-ink mb-4">
+              Recent Inquiries
+            </h2>
             <div className="space-y-3">
               {enquiries.map((e) => (
                 <div key={e.id} className="flex items-start gap-2.5 text-sm">
@@ -104,7 +126,9 @@ export default function Dashboard() {
                     {e.avatar}
                   </div>
                   <div>
-                    <p className="text-ink font-medium leading-snug">{e.name}</p>
+                    <p className="text-ink font-medium leading-snug">
+                      {e.name}
+                    </p>
                     <p className="text-xs text-muted">{e.message}</p>
                     <p className="text-[11px] text-muted mt-0.5">{e.time}</p>
                   </div>
