@@ -1,54 +1,142 @@
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard,
   Package,
   Eye,
-  MessageSquare,
-  Bell,
-  Settings,
   LogOut,
   Leaf,
 } from "lucide-react";
-import { currentUser } from "../../data/mockData";
-import { notifications, enquiries } from "../../data/mockData";
+import api from "../../services/api";
 
 const links = [
-  { label: "Dashboard", to: "/dashboard", icon: LayoutDashboard, end: true },
-  { label: "My Profile", to: "/dashboard/profile", icon: Eye },
-  { label: "My Products", to: "/dashboard/products", icon: Package },
-  // { label: "Inquiries", to: "/dashboard", icon: MessageSquare, badge: enquiries.length },
-  // { label: "Messages", to: "/dashboard", icon: MessageSquare },
-  // { label: "Notifications", to: "/dashboard", icon: Bell, badge: notifications.length },
-  // { label: "Settings", to: "/dashboard", icon: Settings },
+  {
+    label: "Dashboard",
+    to: "/dashboard",
+    icon: LayoutDashboard,
+    end: true,
+  },
+  {
+    label: "My Profile",
+    to: "/dashboard/profile",
+    icon: Eye,
+  },
+  {
+    label: "My Products",
+    to: "/dashboard/products",
+    icon: Package,
+  },
 ];
 
+interface User {
+  id: number;
+  name: string;
+  phone: string;
+  email: string;
+  role: string;
+  block?: {
+    id: number;
+    blockName: string;
+  } | null;
+}
+
 export default function Sidebar() {
+  const navigate = useNavigate();
+
+  // Get logged-in user from localStorage
+  const storedUser = localStorage.getItem("kb_user");
+
+  let currentUser: User | null = null;
+
+  if (storedUser) {
+    try {
+      currentUser = JSON.parse(storedUser);
+    } catch (error) {
+      console.error("Error reading user data:", error);
+    }
+  }
+
+  // Logout
+  const handleLogout = async () => {
+    try {
+      // Call Spring Boot logout API
+      await api.post("/users/logout");
+
+      console.log("Backend logout successful");
+    } catch (error) {
+      console.error("Logout error:", error);
+    } finally {
+      // Remove user from browser storage
+      localStorage.removeItem("kb_user");
+
+      // Go to login page
+      navigate("/login", { replace: true });
+    }
+  };
+
+  // User initials
+  const userInitials = currentUser?.name
+    ? currentUser.name
+        .split(" ")
+        .map((name) => name.charAt(0))
+        .join("")
+        .substring(0, 2)
+        .toUpperCase()
+    : "U";
+
+  // Display role
+  const displayRole =
+    currentUser?.role === "farmer"
+      ? "Farmer"
+      : currentUser?.role === "wholesaler"
+      ? "Wholesaler"
+      : currentUser?.role || "User";
+
   return (
     <aside className="w-64 shrink-0 bg-[#0B1F14] text-white min-h-screen flex flex-col">
+
+      {/* ================= LOGO ================= */}
       <div className="flex items-center gap-2 px-5 py-5">
+
         <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary text-white">
           <Leaf size={18} />
         </span>
+
         <span className="text-lg font-extrabold tracking-tight">
           KrishiBlock
         </span>
+
       </div>
 
+
+      {/* ================= USER INFORMATION ================= */}
       <div className="flex items-center gap-3 px-5 py-4 border-y border-white/10">
-        <div className="w-10 h-10 rounded-full bg-primary/30 flex items-center justify-center text-sm font-bold">
-          {currentUser.name
-            .split(" ")
-            .map((n) => n[0])
-            .join("")}
+
+        {/* User Avatar */}
+        <div className="w-10 h-10 rounded-full bg-primary/30 flex items-center justify-center text-sm font-bold shrink-0">
+          {userInitials}
         </div>
+
+        {/* User Name & Role */}
         <div className="min-w-0">
-          <p className="text-sm font-semibold truncate">{currentUser.name}</p>
-          <p className="text-xs text-white/50">Wholesaler</p>
+
+          <p className="text-sm font-semibold truncate">
+            {currentUser?.name || "User"}
+          </p>
+
+          <p className="text-xs text-white/50">
+            {displayRole}
+          </p>
+
         </div>
+
       </div>
 
+
+      {/* ================= NAVIGATION ================= */}
       <nav className="flex-1 px-3 py-4 space-y-1">
+
         {links.map(({ label, to, icon: Icon, end }) => (
+
           <NavLink
             key={to}
             to={to}
@@ -61,25 +149,38 @@ export default function Sidebar() {
               }`
             }
           >
+
             <span className="flex items-center gap-3">
+
               <Icon size={17} />
+
               {label}
+
             </span>
-            {/* {badge ? (
-              <span className="text-[11px] font-bold bg-danger text-white rounded-full w-5 h-5 flex items-center justify-center">
-                {badge}
-              </span>
-            ) : null} */}
+
           </NavLink>
+
         ))}
+
       </nav>
 
+
+      {/* ================= LOGOUT ================= */}
       <div className="px-3 py-4 border-t border-white/10">
-        <button className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-white/70 hover:bg-white/10 hover:text-white transition-colors w-full">
+
+        <button
+          onClick={handleLogout}
+          className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-white/70 hover:bg-white/10 hover:text-white transition-colors w-full"
+        >
+
           <LogOut size={17} />
+
           Logout
+
         </button>
+
       </div>
+
     </aside>
   );
 }

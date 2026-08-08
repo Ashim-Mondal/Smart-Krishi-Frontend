@@ -1,29 +1,91 @@
+import { useEffect, useState } from "react";
 import {
   Pencil,
-  Trash2,
   Plus,
   Bell,
   AlertTriangle,
   CheckCircle2,
   Info,
 } from "lucide-react";
-import StatsCard from "../../components/layout/StatsCard";
+
 import Button from "../../components/ui/Button";
 import EditProfile from "./EditProfile";
 import { useDisclosure } from "../../hooks/useDisclosure";
-import { useAppContext } from "../../context/AppContext";
-import { dashboardStats, notifications, enquiries } from "../../data/mockData";
 
-const notifIcon = { info: Info, success: CheckCircle2, warning: AlertTriangle };
+interface Block {
+  id: number;
+  blockName: string;
+}
+
+interface User {
+  id: number;
+  name: string;
+  email: string;
+  phone: string;
+  role: string;
+  block: Block | null;
+  createdAt?: string;
+}
+
+const notifIcon = {
+  info: Info,
+  success: CheckCircle2,
+  warning: AlertTriangle,
+};
 
 export default function Dashboard() {
-  const { profile } = useAppContext();
   const editPanel = useDisclosure();
+
+  const [user, setUser] = useState<User | null>(null);
+
+  // Get logged-in user from localStorage
+  useEffect(() => {
+    const storedUser = localStorage.getItem("kb_user");
+
+    if (storedUser) {
+      try {
+        const parsedUser: User = JSON.parse(storedUser);
+        setUser(parsedUser);
+      } catch (error) {
+        console.error("Error reading logged-in user:", error);
+      }
+    }
+  }, []);
+
+  /*
+   * Temporary notifications.
+   * Later we can connect these with your backend.
+   */
+  const notifications = [
+    {
+      id: 1,
+      type: "info" as keyof typeof notifIcon,
+      title: "Welcome to SmartKrishi",
+      time: "Just now",
+    },
+    {
+      id: 2,
+      type: "success" as keyof typeof notifIcon,
+      title: "Your account has been created successfully",
+      time: "Today",
+    },
+  ];
 
   return (
     <div>
+      {/* ================= HEADER ================= */}
+
       <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
-        <h1 className="text-xl font-extrabold text-ink">Dashboard</h1>
+        <div>
+          <h1 className="text-xl font-extrabold text-ink">
+            Welcome, {user?.name || "User"}
+          </h1>
+
+          <p className="text-sm text-muted mt-1">
+            Manage your SmartKrishi account
+          </p>
+        </div>
+
         <Button
           variant="outline"
           size="sm"
@@ -34,112 +96,288 @@ export default function Dashboard() {
         </Button>
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        {dashboardStats.map((s) => (
-          <StatsCard key={s.id} stat={s} />
-        ))}
+      {/* ================= USER INFORMATION ================= */}
+
+      <div className="card p-5 mb-6">
+        <h2 className="text-sm font-bold text-ink mb-4">
+          My Information
+        </h2>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+
+          {/* Name */}
+          <div>
+            <p className="text-xs text-muted mb-1">
+              Name
+            </p>
+
+            <p className="font-semibold text-ink">
+              {user?.name || "-"}
+            </p>
+          </div>
+
+          {/* Email */}
+          <div>
+            <p className="text-xs text-muted mb-1">
+              Email
+            </p>
+
+            <p className="font-semibold text-ink">
+              {user?.email || "-"}
+            </p>
+          </div>
+
+          {/* Phone */}
+          <div>
+            <p className="text-xs text-muted mb-1">
+              Phone
+            </p>
+
+            <p className="font-semibold text-ink">
+              {user?.phone || "-"}
+            </p>
+          </div>
+
+          {/* Block */}
+          <div>
+            <p className="text-xs text-muted mb-1">
+              Block
+            </p>
+
+            <p className="font-semibold text-ink">
+              {user?.block?.blockName || "-"}
+            </p>
+          </div>
+
+        </div>
+
+        {/* Role */}
+        <div className="mt-5">
+          <p className="text-xs text-muted mb-1">
+            User Type
+          </p>
+
+          <span className="inline-flex items-center px-3 py-1 rounded-full bg-primary-light text-primary text-xs font-semibold capitalize">
+            {user?.role || "-"}
+          </span>
+        </div>
       </div>
+
+      {/* ================= STATISTICS ================= */}
+
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+
+        <div className="card p-5 text-center">
+          <p className="text-sm text-muted">
+            Profile Views
+          </p>
+
+          <p className="text-3xl font-extrabold text-ink mt-2">
+            0
+          </p>
+
+          <p className="text-xs text-muted mt-1">
+            Today
+          </p>
+        </div>
+
+        <div className="card p-5 text-center">
+          <p className="text-sm text-muted">
+            Phone Clicks
+          </p>
+
+          <p className="text-3xl font-extrabold text-ink mt-2">
+            0
+          </p>
+
+          <p className="text-xs text-muted mt-1">
+            Today
+          </p>
+        </div>
+
+        <div className="card p-5 text-center">
+          <p className="text-sm text-muted">
+            WhatsApp Clicks
+          </p>
+
+          <p className="text-3xl font-extrabold text-ink mt-2">
+            0
+          </p>
+
+          <p className="text-xs text-muted mt-1">
+            Today
+          </p>
+        </div>
+
+        <div className="card p-5 text-center">
+          <p className="text-sm text-muted">
+            Total Inquiries
+          </p>
+
+          <p className="text-3xl font-extrabold text-ink mt-2">
+            0
+          </p>
+
+          <p className="text-xs text-muted mt-1">
+            This Month
+          </p>
+        </div>
+
+      </div>
+
+      {/* ================= PRODUCTS + NOTIFICATIONS ================= */}
 
       <div className="grid lg:grid-cols-3 gap-6">
+
+        {/* ================= PRODUCTS ================= */}
+
         <div className="lg:col-span-2 card p-5">
+
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-sm font-bold text-ink">Your Products</h2>
-            <Button size="sm" icon={<Plus size={14} />}>
+
+            <h2 className="text-sm font-bold text-ink">
+              Your Products
+            </h2>
+
+            <Button
+              size="sm"
+              icon={<Plus size={14} />}
+            >
               Add Product
             </Button>
+
           </div>
+
           <div className="overflow-x-auto">
+
             <table className="w-full text-sm">
+
               <thead>
                 <tr className="text-left text-muted border-b border-border">
-                  <th className="pb-2 font-medium">Product</th>
-                  <th className="pb-2 font-medium">Quantity</th>
-                  <th className="pb-2 font-medium">Price (100)</th>
-                  <th className="pb-2 font-medium">Last Updated</th>
-                  <th className="pb-2 font-medium">Status</th>
-                  <th className="pb-2 font-medium">Action</th>
+
+                  <th className="pb-2 font-medium">
+                    Product
+                  </th>
+
+                  <th className="pb-2 font-medium">
+                    Quantity
+                  </th>
+
+                  <th className="pb-2 font-medium">
+                    Price
+                  </th>
+
+                  <th className="pb-2 font-medium">
+                    Last Updated
+                  </th>
+
+                  <th className="pb-2 font-medium">
+                    Status
+                  </th>
+
+                  <th className="pb-2 font-medium">
+                    Action
+                  </th>
+
                 </tr>
               </thead>
+
               <tbody>
-                {profile.products.map((p) => (
-                  <tr
-                    key={p.id}
-                    className="border-b border-border last:border-0"
+
+                {/* No products yet */}
+                <tr>
+                  <td
+                    colSpan={6}
+                    className="text-center py-10 text-muted"
                   >
-                    <td className="py-2.5 flex items-center gap-2 font-medium text-ink">
-                      <span className="text-lg">{p.image}</span> {p.name}
-                    </td>
-                    <td className="py-2.5 text-ink">{p.buyingQuantity}</td>
-                    <td className="py-2.5 text-ink">
-                      ₹{p.buyingPrice.toLocaleString("en-IN")}
-                    </td>
-                    <td className="py-2.5 text-muted">{p.lastUpdated}</td>
-                    <td className="py-2.5">
-                      <span className="text-xs font-semibold text-success bg-green-50 px-2 py-1 rounded-full">
-                        Active
-                      </span>
-                    </td>
-                    <td className="py-2.5">
-                      <button className="text-primary hover:text-primary-dark mr-3">
-                        <Pencil size={14} />
-                      </button>
-                      <button className="text-danger hover:text-red-700">
-                        <Trash2 size={14} />
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
+                    <div className="flex flex-col items-center">
 
-        <div className="space-y-6">
-          <div className="card p-5">
-            <h2 className="text-sm font-bold text-ink mb-4 flex items-center gap-2">
-              <Bell size={15} className="text-primary" /> Notifications
-            </h2>
-            <div className="space-y-3">
-              {notifications.map((n) => {
-                const Icon = notifIcon[n.type];
-                return (
-                  <div key={n.id} className="flex items-start gap-2.5 text-sm">
-                    <Icon size={15} className="text-primary mt-0.5 shrink-0" />
-                    <div>
-                      <p className="text-ink leading-snug">{n.title}</p>
-                      <p className="text-[11px] text-muted">{n.time}</p>
+                      <div className="text-3xl mb-2">
+                        📦
+                      </div>
+
+                      <p className="font-medium text-ink">
+                        No products added yet
+                      </p>
+
+                      <p className="text-xs mt-1">
+                        Click "Add Product" to add your first product.
+                      </p>
+
                     </div>
-                  </div>
-                );
-              })}
-            </div>
+                  </td>
+                </tr>
+
+              </tbody>
+
+            </table>
+
           </div>
 
-          <div className="card p-5">
-            <h2 className="text-sm font-bold text-ink mb-4">
-              Recent Inquiries
-            </h2>
-            <div className="space-y-3">
-              {enquiries.map((e) => (
-                <div key={e.id} className="flex items-start gap-2.5 text-sm">
-                  <div className="w-8 h-8 rounded-full bg-primary-light text-primary font-bold text-xs flex items-center justify-center shrink-0">
-                    {e.avatar}
-                  </div>
-                  <div>
-                    <p className="text-ink font-medium leading-snug">
-                      {e.name}
-                    </p>
-                    <p className="text-xs text-muted">{e.message}</p>
-                    <p className="text-[11px] text-muted mt-0.5">{e.time}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
         </div>
+
+        {/* ================= NOTIFICATIONS ================= */}
+
+        <div className="card p-5">
+
+          <h2 className="text-sm font-bold text-ink mb-4 flex items-center gap-2">
+
+            <Bell
+              size={15}
+              className="text-primary"
+            />
+
+            Notifications
+
+          </h2>
+
+          <div className="space-y-4">
+
+            {notifications.map((notification) => {
+
+              const Icon = notifIcon[notification.type];
+
+              return (
+                <div
+                  key={notification.id}
+                  className="flex items-start gap-2.5 text-sm"
+                >
+
+                  <Icon
+                    size={15}
+                    className="text-primary mt-0.5 shrink-0"
+                  />
+
+                  <div>
+
+                    <p className="text-ink leading-snug">
+                      {notification.title}
+                    </p>
+
+                    <p className="text-[11px] text-muted">
+                      {notification.time}
+                    </p>
+
+                  </div>
+
+                </div>
+              );
+
+            })}
+
+          </div>
+
+        </div>
+
       </div>
 
-      <EditProfile open={editPanel.isOpen} onClose={editPanel.close} />
+      {/* ================= EDIT PROFILE ================= */}
+
+      <EditProfile
+        open={editPanel.isOpen}
+        onClose={editPanel.close}
+      />
+
     </div>
   );
 }

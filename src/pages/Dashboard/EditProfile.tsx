@@ -1,178 +1,345 @@
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-// import { Camera } from "lucide-react";
+
 import Modal from "../../components/ui/Modal";
 import Button from "../../components/ui/Button";
-import { useAppContext } from "../../context/AppContext";
+import api from "../../services/api";
 
 const schema = z.object({
-  // businessName: z.string().min(2, "Required"),
-  name: z.string().min(2, "Required"),
-  phone: z.string().min(10, "Enter a valid number"),
-  // whatsapp: z.string().min(10, "Enter a valid number"),
-  village: z.string().min(1, "Required"),
-  block: z.string().min(1, "Required"),
-  // district: z.string().min(1, "Required"),
-  // mapsUrl: z.string().optional(),
-  about: z.string().max(400).optional(),
-  // openTime: z.string().min(1, "Required"),
-  // closeTime: z.string().min(1, "Required"),
+  name: z.string().min(2, "Name is required"),
+
+  phone: z
+    .string()
+    .min(10, "Enter a valid phone number")
+    .max(10, "Enter a valid phone number"),
+
+  email: z.string().email("Enter a valid email"),
+
+  role: z.enum(["farmer", "wholesaler"]),
 });
+
 type FormValues = z.infer<typeof schema>;
+
+interface Block {
+  id: number;
+  blockName: string;
+}
+
+interface User {
+  id: number;
+  name: string;
+  phone: string;
+  email: string;
+  password?: string;
+  role: string;
+  block: Block | null;
+}
 
 interface EditProfileProps {
   open: boolean;
   onClose: () => void;
 }
 
-export default function EditProfile({ open, onClose }: EditProfileProps) {
-  const { profile, updateProfile } = useAppContext();
+export default function EditProfile({
+  open,
+  onClose,
+}: EditProfileProps) {
+  const [user, setUser] = useState<User | null>(null);
+  const [blocks, setBlocks] = useState<Block[]>([]);
+  const [selectedBlock, setSelectedBlock] = useState<string>("");
+  const [serverError, setServerError] = useState("");
+
+  // Get logged-in user from localStorage
+  useEffect(() => {
+    const storedUser = localStorage.getItem("kb_user");
+
+    if (storedUser) {
+      try {
+        const parsedUser: User = JSON.parse(storedUser);
+
+        setUser(parsedUser);
+
+        if (parsedUser.block) {
+          setSelectedBlock(parsedUser.block.id.toString());
+        }
+      } catch (error) {
+        console.error("Error reading user:", error);
+      }
+    }
+  }, [open]);
+
+  // Load blocks from backend
+  useEffect(() => {
+    if (open) {
+      api
+        .get("/block/all")
+        .then((response) => {
+          setBlocks(response.data);
+        })
+        .catch((error) => {
+          console.error("Error loading blocks:", error);
+        });
+    }
+  }, [open]);
 
   const {
     register,
     handleSubmit,
+    reset,
     formState: { errors, isSubmitting },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
-    values: {
-      // businessName: profile.businessName,
-      name: profile.name,
-      phone: profile.phone,
-      // whatsapp: profile.whatsapp,
-      village: profile.village,
-      block: profile.block,
-      // district: profile.district,
-      // mapsUrl: profile.mapsUrl,
-      about: profile.about,
-      // openTime: profile.businessHours.openTime,
-      // closeTime: profile.businessHours.closeTime,
-    },
   });
 
+  // Put existing user data into form
+  useEffect(() => {
+    if (user) {
+      reset({
+        name: user.name,
+        phone: user.phone,
+        email: user.email,
+        role:
+          user.role === "wholesaler"
+            ? "wholesaler"
+            : "farmer",
+      });
+
+      if (user.block) {
+        setSelectedBlock(user.block.id.toString());
+      }
+    }
+  }, [user, reset]);
+
   const onSubmit = async (data: FormValues) => {
-    await new Promise((r) => setTimeout(r, 400));
-    updateProfile({
-      // businessName: data.businessName,
-      name: data.name,
-      phone: data.phone,
-      // whatsapp: data.whatsapp,
-      village: data.village,
-      block: data.block,
-      // district: data.district,
-      // mapsUrl: data.mapsUrl,
-      about: data.about,
-      // businessHours: {
-      //   ...profile.businessHours,
-      //   openTime: data.openTime,
-      //   closeTime: data.closeTime,
-      // },
-    });
-    onClose();
+    if (!user) {
+      setServerError("User not logged in");
+      return;
+    }
+
+    try {
+      setServerError("");
+
+      // Find selected block
+      const block = blocks.find(
+        (b) => b.id.toString() === selectedBlock
+      );
+
+      if (!block) {
+        setServerError("Please select a valid block");
+        return;
+      }
+
+      // Data sent to Spring Boot
+      const updatedUser = {
+        id: user.id,
+        name: data.name,
+        phone: data.phone,
+        email: data.email,
+        role: data.role,
+        password: user.password,
+        block: {
+          id: block.id,
+        },
+      };
+
+      console.log("Updating user:", updatedUser);
+
+      // PUT request
+      const response = await api.put(
+        `/users/update/${user.id}`,
+        updatedUser
+      );
+
+      console.log("Updated user response:", response.data);
+
+      // Save updated user to localStorage
+      localStorage.setItem(
+        "kb_user",
+        JSON.stringify(response.data)
+      );
+
+      // Update local state
+      setUser(response.data);
+
+      alert("Profile updated successfully!");
+
+      onClose();
+
+      // Refresh page so Sidebar/Profile immediately show changes
+      window.location.reload();
+
+    } catch (error: any) {
+      console.error("Update profile error:", error);
+
+      if (error.response?.data) {
+        setServerError(
+          typeof error.response.data === "string"
+            ? error.response.data
+            : "Failed to update profile"
+        );
+      } else {
+        setServerError(
+          "Cannot connect to server. Make sure Spring Boot is running."
+        );
+      }
+    }
   };
 
   return (
-    <Modal open={open} onClose={onClose} title="Edit Profile" variant="panel">
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-        <div className="flex items-center gap-4">
-          <div
-            className="w-16 h-16 rounded-2xl flex items-center justify-center text-white font-bold text-xl shrink-0"
-            style={{ backgroundColor: profile.logoColor }}
-          >
-            {profile.name.slice(0, 2).toUpperCase()}
-          </div>
-          {/* <Button type="button" variant="outline" size="sm" icon={<Camera size={14} />}>
-            Change Photo
-          </Button> */}
-        </div>
+    <Modal
+      open={open}
+      onClose={onClose}
+      title="Edit Profile"
+      variant="panel"
+    >
+      <form
+        onSubmit={handleSubmit(onSubmit)}
+        className="space-y-5"
+      >
 
+        {/* Profile Information */}
         <div>
           <h3 className="text-sm font-bold text-ink mb-3">
             Profile Information
           </h3>
-          <div className="grid grid-cols-1 gap-4">
-            {/* <div>
-              <label className="label-field">Business Name</label>
-              <input {...register("businessName")} className="input-field" />
-              {errors.businessName && <p className="text-xs text-danger mt-1">{errors.businessName.message}</p>}
-            </div> */}
+
+          <div className="space-y-4">
+
+            {/* Name */}
             <div>
-              <label className="label-field">Owner Name :</label>
-              <input {...register("name")} className="input-field" />
-            </div>
-            {/* <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="label-field">Mobile Number</label>
-                <input {...register("phone")} className="input-field" />
-              </div>
-              <div>
-                <label className="label-field">WhatsApp Number</label>
-                <input {...register("whatsapp")} className="input-field" />
-              </div>
-            </div> */}
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="label-field">Mobile Number :</label>
-                <input {...register("phone")} className="input-field" />
-              </div>
-              {/* <div>
-                <label className="label-field">District :</label>
-                <input {...register("district")} className="input-field" />
-              </div> */}
-              <div>
-                <label className="label-field col-span-1">Block :</label>
-                <input {...register("block")} className="input-field" />
-              </div>
-            </div>
-            
-            <div>
-              <label className="label-field col-span-1">
-                Village/Address :
+              <label className="label-field">
+                Name
               </label>
-              <input {...register("village")} className="input-field" />
-            </div>
-            {/* <div>
-              <label className="label-field">Google Maps Link</label>
-              <input {...register("mapsUrl")} className="input-field" />
-            </div> */}
-          </div>
-        </div>
 
-        <div>
-          <h3 className="text-sm font-bold text-ink mb-3">Business Details</h3>
-          <div className="space-y-3">
-            <div>
-              <label className="label-field">Business Description</label>
-              <textarea
-                {...register("about")}
-                rows={4}
-                className="input-field resize-none"
+              <input
+                {...register("name")}
+                className="input-field"
+                placeholder="Enter your name"
               />
+
+              {errors.name && (
+                <p className="text-xs text-danger mt-1">
+                  {errors.name.message}
+                </p>
+              )}
             </div>
-            {/* <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="label-field">Opening Time</label>
-                <input
-                  {...register("openTime")}
-                  className="input-field"
-                  placeholder="09:00 AM"
-                />
-              </div>
-              <div>
-                <label className="label-field">Closing Time</label>
-                <input
-                  {...register("closeTime")}
-                  className="input-field"
-                  placeholder="07:00 PM"
-                />
-              </div>
-            </div> */}
+
+            {/* Phone */}
+            <div>
+              <label className="label-field">
+                Mobile Number
+              </label>
+
+              <input
+                {...register("phone")}
+                className="input-field"
+                placeholder="Enter mobile number"
+              />
+
+              {errors.phone && (
+                <p className="text-xs text-danger mt-1">
+                  {errors.phone.message}
+                </p>
+              )}
+            </div>
+
+            {/* Email */}
+            <div>
+              <label className="label-field">
+                Email
+              </label>
+
+              <input
+                type="email"
+                {...register("email")}
+                className="input-field"
+                placeholder="Enter email"
+              />
+
+              {errors.email && (
+                <p className="text-xs text-danger mt-1">
+                  {errors.email.message}
+                </p>
+              )}
+            </div>
+
+            {/* Block */}
+            <div>
+              <label className="label-field">
+                Block
+              </label>
+
+              <select
+                value={selectedBlock}
+                onChange={(e) =>
+                  setSelectedBlock(e.target.value)
+                }
+                className="input-field"
+              >
+                <option value="">
+                  Select Block
+                </option>
+
+                {blocks.map((block) => (
+                  <option
+                    key={block.id}
+                    value={block.id}
+                  >
+                    {block.blockName}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Role */}
+            <div>
+              <label className="label-field">
+                User Type
+              </label>
+
+              <select
+                {...register("role")}
+                className="input-field"
+              >
+                <option value="farmer">
+                  Farmer
+                </option>
+
+                <option value="wholesaler">
+                  Wholesaler
+                </option>
+              </select>
+
+              {errors.role && (
+                <p className="text-xs text-danger mt-1">
+                  {errors.role.message}
+                </p>
+              )}
+            </div>
+
           </div>
         </div>
 
-        <Button type="submit" fullWidth disabled={isSubmitting}>
-          {isSubmitting ? "Saving..." : "Save Changes"}
+        {/* Server Error */}
+        {serverError && (
+          <p className="text-sm text-danger">
+            {serverError}
+          </p>
+        )}
+
+        {/* Save */}
+        <Button
+          type="submit"
+          fullWidth
+          disabled={isSubmitting}
+        >
+          {isSubmitting
+            ? "Saving..."
+            : "Save Changes"}
         </Button>
+
       </form>
     </Modal>
   );
