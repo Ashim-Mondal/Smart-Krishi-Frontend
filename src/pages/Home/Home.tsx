@@ -5,7 +5,8 @@ import WeatherCard from "../../components/layout/WeatherCard";
 import ProductCard from "../../components/layout/ProductCard";
 import WholesalerCard from "../../components/layout/WholesalerCard";
 import SectionTitle from "../../components/ui/SectionTitle";
-import { products, marketPrices, wholesalers, weather } from "../../data/mockData";
+import { products, wholesalers, weather } from "../../data/mockData";
+import { useAppContext } from "../../context/AppContext";
 
 const heroStats = [
   { icon: Users, value: "50+", label: "Verified Wholesalers" },
@@ -15,26 +16,59 @@ const heroStats = [
 ];
 
 export default function Home() {
+  const { dailyMarketPrices, marketPricesLoading } = useAppContext();
+
+  const getTodayDate = () => {
+    const today = new Date();
+
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, "0");
+    const day = String(today.getDate()).padStart(2, "0");
+
+    return `${year}-${month}-${day}`;
+  };
+
+  const today = getTodayDate();
+
+  const todaysPrices = dailyMarketPrices
+    .filter((price) => price.date === today)
+    .slice(0, 4);
+
   return (
-    <div className="pb-16">
+    <>
       {/* Hero */}
-      <section className="bg-gradient-to-b from-primary-light/60 to-bg">
-        <div className="container-app pt-10 pb-8 grid lg:grid-cols-2 gap-8 items-center">
-          <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-            <h1 className="text-3xl sm:text-4xl lg:text-[2.6rem] font-extrabold text-ink leading-tight">
-              Find Verified <br /> Wholesalers in Your Block
+      <section className="container-app mt-8">
+        <div className="grid lg:grid-cols-2 gap-6 items-center">
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            <h1 className="text-3xl sm:text-4xl font-extrabold text-ink">
+              Find Verified Wholesalers in Your Block
             </h1>
-            <p className="text-muted mt-3 mb-6 max-w-md">
+
+            <p className="text-muted mt-3">
               Trusted buyers. Better farming. Stronger farming.
             </p>
+
             <SearchBar />
 
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-8">
               {heroStats.map(({ icon: Icon, value, label }) => (
-                <div key={label} className="card p-3 flex flex-col items-start gap-1">
+                <div
+                  key={label}
+                  className="card p-3 flex flex-col items-start gap-1"
+                >
                   <Icon size={16} className="text-primary" />
-                  <span className="text-base font-extrabold text-ink">{value}</span>
-                  <span className="text-[11px] text-muted leading-tight">{label}</span>
+
+                  <span className="text-base font-extrabold text-ink">
+                    {value}
+                  </span>
+
+                  <span className="text-[11px] text-muted leading-tight">
+                    {label}
+                  </span>
                 </div>
               ))}
             </div>
@@ -51,21 +85,48 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Market Price + Weather */}
       <div className="container-app mt-8 grid lg:grid-cols-3 gap-6">
-        {/* Market prices */}
         <div className="lg:col-span-2 card p-5">
-          <h3 className="text-sm font-bold text-ink mb-4">Today's Market Price ({weather.location})</h3>
+          <h3 className="text-sm font-bold text-ink mb-4">
+            Today's Market Price ({weather.location})
+          </h3>
+
           <div className="space-y-3">
-            {marketPrices.map((mp) => (
-              <div key={mp.id} className="flex items-center justify-between text-sm">
-                <span className="text-ink font-medium">{mp.productName}</span>
-                <span className="text-muted">₹{mp.price.toLocaleString("en-IN")} / {mp.unit}</span>
+            {marketPricesLoading ? (
+              <div className="text-sm text-muted py-3">
+                Loading today's market prices...
               </div>
-            ))}
+            ) : todaysPrices.length === 0 ? (
+              <div className="text-sm text-muted py-3">
+                No market prices available for today.
+              </div>
+            ) : (
+              todaysPrices.map((price, index) => (
+                <div
+                  key={`${price.product}-${price.date}-${price.marketPrice}-${index}`}
+                  className="flex items-center justify-between text-sm"
+                >
+                  <span className="text-ink font-medium">{price.product}</span>
+
+                  <div className="flex items-center gap-3">
+                    <span className="text-muted">
+                      ₹{price.marketPrice.toLocaleString("en-IN")}
+                      {" / "}
+                      {price.quantity}
+                    </span>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
-          <button className="text-xs font-semibold text-primary mt-4 hover:text-primary-dark transition-colors">
+
+          <a
+            href="/daily-market-price"
+            className="inline-block text-xs font-semibold text-primary mt-4 hover:text-primary-dark transition-colors"
+          >
             View All Prices
-          </button>
+          </a>
         </div>
 
         <WeatherCard />
@@ -73,7 +134,12 @@ export default function Home() {
 
       {/* Popular products */}
       <div className="container-app mt-10">
-        <SectionTitle title="Popular Products" actionLabel="View All Products" actionTo="/products" />
+        <SectionTitle
+          title="Popular Products"
+          actionLabel="View All Products"
+          actionTo="/products"
+        />
+
         <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-4">
           {products.map((p) => (
             <ProductCard key={p.id} product={p} />
@@ -83,13 +149,18 @@ export default function Home() {
 
       {/* Wholesalers */}
       <div className="container-app mt-10">
-        <SectionTitle title="Top Verified Wholesalers" actionLabel="View All" actionTo="/wholesalers" />
+        <SectionTitle
+          title="Top Verified Wholesalers"
+          actionLabel="View All"
+          actionTo="/wholesalers"
+        />
+
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {wholesalers.map((w) => (
             <WholesalerCard key={w.id} wholesaler={w} />
           ))}
         </div>
       </div>
-    </div>
+    </>
   );
 }

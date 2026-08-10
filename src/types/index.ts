@@ -52,6 +52,21 @@ export interface MarketPrice {
   unit: string;
 }
 
+export interface DailyMarketPrice {
+  product: string;
+  marketPrice: number;
+  quantity: string;
+  status: string;
+  date: string;
+  block: string;
+}
+
+export interface ProductList {
+  id: number;
+  productName: string;
+  quantity: number;
+}
+
 export interface WeatherInfo {
   location: string;
   tempC: number;

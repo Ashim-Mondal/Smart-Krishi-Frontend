@@ -5,6 +5,7 @@ import Button from "../ui/Button";
 const navLinks = [
   { label: "Home", to: "/" },
   { label: "Products", to: "/products" },
+  { label: "Daily Market Price", to: "/daily-market-price" },
   { label: "Wholesalers", to: "/wholesalers" },
   { label: "Dashboard", to: "/dashboard" },
   { label: "About", to: "/about" },
@@ -12,17 +13,19 @@ const navLinks = [
 
 export default function Navbar() {
   return (
-    <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-border">
-      <div className="container-app flex items-center justify-between h-16 gap-6">
+    <header className="sticky top-0 z-50 border-b border-border bg-white/95 backdrop-blur">
+      <div className="container-app flex items-center gap-6 py-3">
         <Link to="/" className="flex items-center gap-2 shrink-0">
-          <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary text-white">
-            <Leaf size={18} />
-          </span>
-          <span className="text-lg font-extrabold text-ink tracking-tight">Smart Krishi</span>
+          <div className="w-9 h-9 rounded-xl bg-primary flex items-center justify-center text-white">
+            <Leaf size={20} />
+          </div>
+
+          <span className="font-extrabold text-lg text-ink">Smart Krishi</span>
         </Link>
 
         <div className="hidden md:flex items-center flex-1 max-w-md relative">
           <Search size={16} className="absolute left-3.5 text-muted" />
+
           <input
             type="text"
             placeholder="Search products, wholesalers..."
@@ -45,6 +48,7 @@ export default function Navbar() {
               {({ isActive }) => (
                 <span className="relative">
                   {link.label}
+
                   {isActive && (
                     <span className="absolute -bottom-[1px] left-0 right-0 h-[2px] bg-primary rounded-full" />
                   )}
