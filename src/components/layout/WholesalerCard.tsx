@@ -1,8 +1,14 @@
 import { Link } from "react-router-dom";
 import { BadgeCheck, Landmark } from "lucide-react";
 import type { Wholesaler } from "../../types";
+import { randomColorStyle } from "../../utils/cn";
 
-export default function WholesalerCard({ wholesaler }: { wholesaler: Wholesaler }) {
+export default function WholesalerCard({
+  wholesaler,
+}: {
+  wholesaler: Wholesaler;
+}) {
+  console.log("Rendering WholesalerCard for wholesaler:", wholesaler);
   return (
     <Link
       to={`/wholesalers/${wholesaler.id}`}
@@ -10,16 +16,22 @@ export default function WholesalerCard({ wholesaler }: { wholesaler: Wholesaler 
     >
       <div
         className="w-11 h-11 rounded-xl flex items-center justify-center text-white shrink-0"
-        style={{ backgroundColor: wholesaler.logoColor }}
+        style={randomColorStyle}
       >
-        <Landmark size={18} />
+        <Landmark size={20} />
       </div>
+
       <div className="min-w-0">
         <p className="text-sm font-bold text-ink truncate">{wholesaler.name}</p>
-        <p className="text-xs text-muted truncate">{wholesaler.village}</p>
+
+        <p className="text-xs text-muted">
+          {wholesaler.block?.blockName ?? "Block not available"}
+        </p>
+
         {wholesaler.verified && (
-          <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-primary mt-0.5">
-            <BadgeCheck size={12} /> Verified
+          <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-primary mt-1">
+            <BadgeCheck size={11} />
+            Verified
           </span>
         )}
       </div>
