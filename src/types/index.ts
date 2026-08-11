@@ -6,25 +6,28 @@
 
 export interface ProductEntry {
   id: string;
-  name: string;
-  image: string;
-  buyingQuantity: string;
-  buyingPrice: number;
-  lastUpdated: string;
+  productName: string;
+  category: string;
+  productImageId: { imageUrl: string };
+  quantity: number;
+  dailyPrice: { wholesalePrice: number };
+  // lastUpdated: string;
 }
 
 export interface Wholesaler {
   id: string;
-  businessName: string;
+  // businessName: string;
   name: string;
-  logoInitials: string;
-  logoColor: string;
+  // logoInitials: string;
+  // logoColor: string;
   verified: boolean;
   // rating: number;
   // reviews: number;
   // experience: number;
   village: string;
-  block: string;
+  block: {
+    blockName: string;
+  };
   // district: string;
   phone: string;
   // whatsapp: string;
@@ -54,17 +57,34 @@ export interface MarketPrice {
 
 export interface DailyMarketPrice {
   product: string;
+  wholesalePrice: number;
   marketPrice: number;
   quantity: string;
   status: string;
   date: string;
   block: string;
+  productId: number;
 }
+
+export interface finalProductData {
+  productName: string;
+  productId: number;
+  quantity: number;
+  wholesalePrice: number;
+}
+
+export interface getDailyMarketPricesOriginal {}
 
 export interface ProductList {
   id: number;
+  sellerId: {
+    id: string;
+  };
   productName: string;
   quantity: number;
+  productImageId: {
+    imageUrl: string;
+  };
 }
 
 export interface WeatherInfo {

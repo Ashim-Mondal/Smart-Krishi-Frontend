@@ -5,7 +5,7 @@ import WeatherCard from "../../components/layout/WeatherCard";
 import ProductCard from "../../components/layout/ProductCard";
 import WholesalerCard from "../../components/layout/WholesalerCard";
 import SectionTitle from "../../components/ui/SectionTitle";
-import { products, wholesalers, weather } from "../../data/mockData";
+import { products, weather } from "../../data/mockData";
 import { useAppContext } from "../../context/AppContext";
 
 const heroStats = [
@@ -16,7 +16,8 @@ const heroStats = [
 ];
 
 export default function Home() {
-  const { dailyMarketPrices, marketPricesLoading } = useAppContext();
+  const { dailyMarketPrices, marketPricesLoading, wholesalers } =
+    useAppContext();
 
   const getTodayDate = () => {
     const today = new Date();
@@ -52,7 +53,7 @@ export default function Home() {
               Trusted buyers. Better farming. Stronger farming.
             </p>
 
-            <SearchBar />
+            {/* <SearchBar /> */}
 
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-8">
               {heroStats.map(({ icon: Icon, value, label }) => (
@@ -133,7 +134,7 @@ export default function Home() {
       </div>
 
       {/* Popular products */}
-      <div className="container-app mt-10">
+      {/* <div className="container-app mt-10">
         <SectionTitle
           title="Popular Products"
           actionLabel="View All Products"
@@ -145,7 +146,7 @@ export default function Home() {
             <ProductCard key={p.id} product={p} />
           ))}
         </div>
-      </div>
+      </div> */}
 
       {/* Wholesalers */}
       <div className="container-app mt-10">
