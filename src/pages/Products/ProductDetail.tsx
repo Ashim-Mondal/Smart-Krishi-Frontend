@@ -1,12 +1,7 @@
 import { Link, useParams } from "react-router-dom";
-
 import { MapPin, MessageCircle } from "lucide-react";
-
 import Button from "../../components/ui/Button";
-
 import { useAppContext } from "../../context/AppContext";
-
-import type { DailyMarketPrice } from "../../types";
 import { randomColorStyle } from "../../utils/cn";
 
 export default function ProductDetail() {
@@ -20,14 +15,6 @@ export default function ProductDetail() {
     marketPricesLoading,
     marketPricesError,
   } = useAppContext();
-
-  console.log("Product Names:", productNames);
-
-  console.log("Product List:", productList);
-
-  console.log("Original Market Prices:", dailyMarketPricesOriginal);
-
-  console.log("Wholesalers:", wholesalers);
 
   // -----------------------------------------
   // Loading
@@ -46,7 +33,7 @@ export default function ProductDetail() {
   }
 
   // -----------------------------------------
-  // 1. Find product name from URL slug
+  // 1. Find current product name from URL
   // -----------------------------------------
 
   const productName = productNames.find(
@@ -57,8 +44,6 @@ export default function ProductDetail() {
     return <div>Product not found.</div>;
   }
 
-  console.log("Selected Product Name:", productName);
-
   // -----------------------------------------
   // 2. Find product from ProductList
   // -----------------------------------------
@@ -68,79 +53,70 @@ export default function ProductDetail() {
       product.productName?.toLowerCase() === productName.toLowerCase(),
   );
 
-  console.log("Product Data:", productData);
-
   if (!productData) {
     return <div>Product data not found.</div>;
   }
 
   // -----------------------------------------
-  // 3. Get product ID
+  // 3. Find market price
   // -----------------------------------------
 
-  const productId = productData.id;
-
-  console.log("Product ID:", productId);
-
-  // -----------------------------------------
-  // 4. Find daily market price
-  // -----------------------------------------
-
-  const dailyPriceData: DailyMarketPrice[] = dailyMarketPricesOriginal.filter(
-    (price) => String(price.productId) === String(productId),
+  const marketPrice = dailyMarketPricesOriginal.find(
+    (price) => String(price.productId) === String(productData.id),
   );
 
-  console.log("Daily Price Data:", dailyPriceData);
-
   // -----------------------------------------
-  // 5. Create final product object
+  // 4. Create ONE seller data array
   // -----------------------------------------
 
-  const finalProductData = {
-    productName: productName,
-
-    productId: dailyPriceData[0]?.productId ?? productId,
-
-    quantity: productData.quantity,
-
-    wholesalePrice: dailyPriceData[0]?.wholesalePrice ?? 0,
-
-    imageUrl: productData.productImageId?.imageUrl ?? "",
-  };
-
-  console.log("Final Product Data:", finalProductData);
-
-  // -----------------------------------------
-  // 6. Find wholesalers who have this product
-  //
-  // wholesalers already contains:
-  //
-  // wholesaler
-  //    ↓
-  // products
-  //    ↓
-  // productName
-  //    ↓
-  // dailyPrice
-  // -----------------------------------------
-
-  const sellers = wholesalers
-    .map((w) => {
-      const entry = w.products.find(
-        (p) => p.productName?.toLowerCase() === productName.toLowerCase(),
+  const sellerData = wholesalers
+    .map((wholesaler) => {
+      const product = wholesaler.products.find(
+        (item) => item.productName?.toLowerCase() === productName.toLowerCase(),
       );
 
+      // This wholesaler does not sell this product
+      if (!product) {
+        return null;
+      }
+
       return {
-        w,
-        entry: {
-          ...entry,
-          wholesalePrice: finalProductData.wholesalePrice,
+        productName: productName,
+
+        productId: marketPrice?.productId ?? productData.id,
+
+        imageUrl: productData.productImageId?.imageUrl ?? "",
+
+        marketPrice: marketPrice?.wholesalePrice ?? 0,
+
+        quantity: product.quantity,
+
+        wholesalePrice: marketPrice?.wholesalePrice ?? 0,
+
+        wholesaler: {
+          id: wholesaler.id,
+          name: wholesaler.name,
+          phone: wholesaler.phone,
+          blockName: wholesaler.block?.blockName ?? "N/A",
         },
       };
     })
-    .filter((item) => item.entry !== undefined);
+    .filter((seller): seller is NonNullable<typeof seller> => seller !== null);
 
-  console.log("Sellers for product:", sellers);
+  console.log("Product Name:", productName);
+  console.log("Product Data:", productData);
+  console.log("Seller Data:", sellerData);
+
+  // -----------------------------------------
+  // Product information
+  // -----------------------------------------
+
+  const product = {
+    productName,
+    productId: marketPrice?.productId ?? productData.id,
+    imageUrl: productData.productImageId?.imageUrl ?? "",
+    marketPrice: marketPrice?.wholesalePrice ?? 0,
+  };
 
   return (
     <div className="container-app py-10">
@@ -155,9 +131,7 @@ export default function ProductDetail() {
           Products
         </Link>{" "}
         {" > "}
-        <span className="text-ink font-medium">
-          {finalProductData.productName}
-        </span>
+        <span className="text-ink font-medium">{product.productName}</span>
       </div>
 
       {/* Product Header */}
@@ -165,13 +139,13 @@ export default function ProductDetail() {
       <div className="card p-6 flex items-center justify-between flex-wrap gap-4 mb-8">
         <div>
           <h1 className="text-2xl font-extrabold text-ink">
-            {finalProductData.productName}
+            {product.productName}
           </h1>
 
           <p className="text-xs text-muted mt-1">Average Market Price Today</p>
 
           <p className="text-2xl font-extrabold text-primary mt-1">
-            ₹{finalProductData.wholesalePrice.toLocaleString("en-IN")}{" "}
+            ₹{product.marketPrice.toLocaleString("en-IN")}{" "}
             <span className="text-sm font-medium text-muted">1 Bag</span>
           </p>
 
@@ -181,10 +155,10 @@ export default function ProductDetail() {
         </div>
 
         <div className="w-24 h-24 rounded-2xl bg-primary-light flex items-center justify-center overflow-hidden">
-          {finalProductData.imageUrl ? (
+          {product.imageUrl ? (
             <img
-              src={finalProductData.imageUrl}
-              alt={finalProductData.productName}
+              src={product.imageUrl}
+              alt={product.productName}
               className="w-full h-full object-cover"
             />
           ) : (
@@ -200,68 +174,73 @@ export default function ProductDetail() {
       </h2>
 
       <div className="space-y-3">
-        {sellers.length === 0 ? (
+        {sellerData.length === 0 ? (
           <div className="card p-4 text-sm text-muted">
             No wholesalers found for this product.
           </div>
         ) : (
-          sellers.map(({ w, entry }) => (
+          sellerData.map((seller) => (
             <div
-              key={w.id}
+              key={seller.wholesaler.id}
               className="card p-4 flex items-center justify-between flex-wrap gap-3"
             >
-              {/* Wholesaler information */}
+              {/* Wholesaler */}
 
               <div className="flex items-center gap-3">
                 <div
                   className="w-11 h-11 rounded-xl flex items-center justify-center text-white font-extrabold text-[10px] text-center leading-tight shrink-0"
                   style={randomColorStyle}
                 >
-                  {w.name.slice(0, 2).toUpperCase()}
+                  {seller.wholesaler.name.slice(0, 2).toUpperCase()}
                 </div>
 
                 <div>
-                  <p className="text-sm font-bold text-ink">{w.name}</p>
+                  <p className="text-sm font-bold text-ink">
+                    {seller.wholesaler.name}
+                  </p>
 
                   <p className="text-xs text-muted flex items-center gap-1">
                     <MapPin size={11} />
 
-                    {w.block?.blockName ?? "N/A"}
+                    {seller.wholesaler.blockName}
                   </p>
                 </div>
               </div>
 
-              {/* Buying Quantity */}
+              {/* Available Quantity */}
 
               <div className="text-center">
                 <p className="text-[11px] text-muted">Available Quantity</p>
 
                 <p className="text-sm font-semibold text-ink">
-                  {entry?.quantity ?? "N/A"}
+                  {seller.quantity ?? "N/A"}
                 </p>
               </div>
 
-              {/* Buying Price */}
+              {/* Price */}
 
               <div className="text-center">
                 <p className="text-[11px] text-muted">Price (1 Bag)</p>
 
                 <p className="text-sm font-semibold text-ink">
-                  ₹{entry?.wholesalePrice ?? 0}
+                  ₹{seller.wholesalePrice}
                 </p>
               </div>
 
               {/* Buttons */}
 
               <div className="flex items-center gap-2">
-                <Link to={`/wholesalers/${w.id}`}>
+                <Link to={`/wholesalers/${seller.wholesaler.id}`}>
                   <Button variant="primary" size="sm">
                     View Profile
                   </Button>
                 </Link>
 
                 <a
-                  href={`https://wa.me/${w.phone.replace(/\s|\+/g, "")}`}
+                  href={`https://wa.me/${seller.wholesaler.phone.replace(
+                    /\s|\+/g,
+                    "",
+                  )}`}
                   target="_blank"
                   rel="noreferrer"
                 >
