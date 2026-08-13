@@ -14,11 +14,11 @@ const links = [
     to: "/dashboard/profile",
     icon: Eye,
   },
-  {
-    label: "My Products",
-    to: "/dashboard/products",
-    icon: Package,
-  },
+  // {
+  //   label: "My Products",
+  //   to: "/dashboard/products",
+  //   icon: Package,
+  // },
 ];
 
 interface User {
