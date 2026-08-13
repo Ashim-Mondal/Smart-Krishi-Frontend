@@ -236,7 +236,7 @@ export default function ProductDetail() {
                   </Button>
                 </Link>
 
-                <a
+                {/* <a
                   href={`https://wa.me/${seller.wholesaler.phone.replace(
                     /\s|\+/g,
                     "",
@@ -249,7 +249,7 @@ export default function ProductDetail() {
                     size="sm"
                     icon={<MessageCircle size={14} />}
                   />
-                </a>
+                </a> */}
               </div>
             </div>
           ))
